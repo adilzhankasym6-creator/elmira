@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ELMIRA</title>
+<style>
+:root{--bg:#f6f4fd;--card:#fff;--ink:#16224a;--mut:#58628d;--pr:#7c3aed;--ln:#e3ddf6;--soft:#ede7fd;--warn:#fff4d6;--warnt:#6b4b00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121430;--card:#1c1f45;--ink:#e8eaff;--mut:#a5acd8;--pr:#8b5cf6;--ln:#2e3266;--soft:#272b5c;--warn:#3a3114;--warnt:#f3d98a}}
+:root[data-theme="dark"]{--bg:#121430;--card:#1c1f45;--ink:#e8eaff;--mut:#a5acd8;--pr:#8b5cf6;--ln:#2e3266;--soft:#272b5c;--warn:#3a3114;--warnt:#f3d98a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+h1,h2,h3{line-height:1.2;margin:0 0 .5em;font-family:Georgia,"Times New Roman",serif}
+h1{font-size:clamp(1.9rem,7vw,3rem)}h2{font-size:1.45rem;margin-top:1.6em}h3{font-size:1.1rem}
+p{margin:0 0 1em}
+.demo{background:var(--warn);color:var(--warnt);font-size:.82rem;padding:.4rem 1rem;text-align:center}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--ln)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:.5rem 1rem;max-width:1000px;margin:auto}
+.logo{font:700 1.35rem Georgia,serif;letter-spacing:.06em;cursor:pointer;background:none;border:0;color:var(--ink)}
+.logo span{color:var(--pr)}
+.ic{display:flex;gap:.3rem}
+.ib{position:relative;background:none;border:0;color:var(--ink);font-size:1.15rem;min-width:44px;min-height:44px;cursor:pointer;border-radius:12px}
+.ib:hover{background:var(--soft)}
+.cnt{position:absolute;top:4px;right:2px;background:var(--pr);color:#fff;border-radius:9px;font-size:.68rem;padding:0 5px;min-width:17px}
+nav{display:flex;gap:.2rem;overflow-x:auto;padding:0 .75rem .5rem;max-width:1000px;margin:auto;scrollbar-width:none}
+nav button{flex:none;background:none;border:0;color:var(--mut);padding:.45rem .8rem;border-radius:20px;font:inherit;font-size:.92rem;cursor:pointer}
+nav button.on{background:var(--soft);color:var(--pr);font-weight:600}
+main{max-width:1000px;margin:auto;padding:1.2rem 1rem 3rem}
+.page{animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.page{animation:none}}
+.btn{background:var(--pr);color:#fff;border:2px solid var(--pr);border-radius:14px;padding:.7rem 1.2rem;font:600 .95rem inherit;font-family:inherit;cursor:pointer;min-height:44px}
+.btn:hover{filter:brightness(1.1)}.btn.ghost{background:transparent;color:var(--pr)}.btn.sm{padding:.45rem .9rem;min-height:36px}
+:focus-visible{outline:3px solid var(--pr);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}
+.hero{padding:2rem 0 1rem}.hero p{max-width:60ch;color:var(--mut);font-size:1.05rem}
+.grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:1.1rem;display:flex;flex-direction:column;gap:.4rem;position:relative}
+.card p{color:var(--mut);font-size:.93rem;flex:1}
+.card.link{cursor:pointer;transition:transform .2s}.card.link:hover{transform:translateY(-3px)}
+.badge{align-self:flex-start;background:var(--soft);color:var(--pr);border-radius:10px;font-size:.78rem;padding:.1rem .6rem;font-weight:600}
+.chips{display:flex;gap:.4rem;overflow-x:auto;padding:.3rem 0 .8rem;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--ln);background:var(--card);color:var(--ink);border-radius:20px;padding:.4rem .9rem;font:inherit;font-size:.9rem;cursor:pointer}
+.chip.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+.ph{height:130px;border-radius:12px;background:linear-gradient(135deg,var(--soft),var(--ln));display:grid;place-items:center;color:var(--mut);font-size:.85rem}
+.hb{position:absolute;top:.6rem;right:.6rem;background:var(--card);border:1px solid var(--ln);border-radius:50%;width:40px;height:40px;font-size:1.2rem;color:var(--pr);cursor:pointer}
+.av{width:120px;height:120px;border-radius:30px;background:linear-gradient(135deg,var(--pr),#4c1d95);color:#fff;font:700 2.2rem Georgia,serif;display:grid;place-items:center;margin-bottom:1rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin:1.2rem 0}
+.stats div{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:.9rem}
+.stats b{display:block;font:700 1.4rem Georgia,serif;color:var(--pr)}
+ul.dir{padding-left:1.2rem}ul.dir li{margin:.3rem 0}
+label{display:block;font-size:.88rem;color:var(--mut);margin:.8rem 0 .25rem}
+input,select,textarea{width:100%;padding:.7rem .8rem;border:1px solid var(--ln);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
+form{max-width:480px}
+.msg{padding:.7rem 1rem;border-radius:12px;margin:.8rem 0;background:var(--soft)}
+.msg.err{background:#fde2e2;color:#8a1c1c}
+.msg.note{background:var(--warn);color:var(--warnt);font-size:.88rem}
+.price{font:700 1.3rem Georgia,serif;color:var(--pr)}
+.item{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.8rem 0;border-bottom:1px solid var(--ln)}
+.q{display:inline-flex;align-items:center;gap:.5rem}
+.q button{width:34px;height:34px;border-radius:10px;border:1px solid var(--ln);background:var(--card);color:var(--ink);cursor:pointer}
+.ov{position:fixed;inset:0;background:rgba(10,10,40,.55);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 1rem) 1rem 1rem}
+.box{background:var(--bg);border-radius:20px;padding:1.2rem;width:100%;max-width:520px;max-height:85%;overflow:auto;animation:in .25s}
+.tabs{display:flex;gap:.4rem;margin-bottom:.5rem;overflow-x:auto}
+.empty{text-align:center;padding:2rem 1rem;color:var(--mut)}
+footer{text-align:center;color:var(--mut);font-size:.82rem;padding:1rem}
+</style>
+</head>
+<body>
+<div class="demo">Демо нұсқа: сервер, төлем жүйесі және хабарлама жіберу әзірге қосылмаған.</div>
+<header>
+<div class="top">
+<button class="logo" data-go="" aria-label="Басты бет">ELMIRA <span>★</span></button>
+<div class="ic">
+<button class="ib" data-search aria-label="Іздеу">🔍</button>
+<button class="ib" data-go="cart" aria-label="Себет">🛒<span class="cnt" id="cc" hidden></span></button>
+<button class="ib" data-go="account" aria-label="Жеке кабинет">👤</button>
+</div></div>
+<nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<footer>© ELMIRA · демо нұсқа</footer>
+<div id="ovr"></div>
+
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const S={cart:[],fav:[],user:null,users:[],orders:[],tab:'courses',ecat:'Барлығы',scat:'Барлығы',pre:null,authTab:'in'};
+try{Object.assign(S,JSON.parse(localStorage.getItem('elmira')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('elmira',JSON.stringify({cart:S.cart,fav:S.fav,user:S.user,users:S.users,orders:S.orders}))}catch(e){}};
+const fmt=n=>n.toLocaleString('ru-RU')+' ₸';
+const NAV=[['','Басты бет'],['about','Эльмира туралы'],['edu','Білім'],['shop','Дүкен'],['projects','Жобалар'],['contact','Байланыс']];
+const ECATS=['Барлығы','Геодезия','Картография','Маркшейдерлік іс','AutoCAD','Зертханалық жұмыстар'];
+const SCATS=['Барлығы','Телефон аксессуарлары','Күтім және косметика','Үйге арналған тауарлар','Жинақтар'];
+const MAT=[
+{id:'m1',t:'Карта масштабы: ұзындық пен ауданды есептеу',d:'Масштабты түсіну және картадағы өлшемдерді жер бетіндегі қашықтыққа айналдыру.',c:'Картография'},
+{id:'m2',t:'Жер бедері және горизонтальдар',d:'Нүкте биіктігін анықтау, беткейдің тіктігін түсіну және профиль құру.',c:'Картография'},
+{id:'m3',t:'Теодолит: құрылымы және өлшеу тәртібі',d:'Аспаптың негізгі бөліктері және далалық жұмыстың орындалу реті.',c:'Геодезия'},
+{id:'m4',t:'AutoCAD-та алғашқы геодезиялық сызба',d:'Координаталармен жұмыс істеуге және алғашқы сызбаны орындауға кіріспе.',c:'AutoCAD'}];
+const COURSES=[];
+/* ДЕМО тауарлар: сынау үшін ғана. Нақты тауарлар басқару панелінен қосылады. */
+const PROD=[
+{id:'p1',n:'Телефон қабы',c:'Телефон аксессуарлары',p:2500,d:'Демо сипаттама: қорғаныш қап. Нақты сипаттама мен фото кейін қосылады.',models:['iPhone 13','iPhone 14','Samsung Galaxy S23','Xiaomi Redmi Note 12']},
+{id:'p2',n:'Үй органайзері',c:'Үйге арналған тауарлар',p:4000,d:'Демо сипаттама: жиынтық сақтау жәшігі. Нақты сипаттама мен фото кейін қосылады.',colors:['Ақ','Сұр','Бежевый']}];
+const findP=id=>PROD.find(p=>p.id===id);
+const heart=id=>`<button class="hb" data-fav="${id}" aria-label="Таңдаулыларға">${S.fav.includes(id)?'♥':'♡'}</button>`;
+const card=(t,d,b,g)=>`<div class="card"><h3>${t}</h3><p>${d}</p><button class="btn sm" data-go="${g}" style="align-self:flex-start">${b}</button></div>`;
+const chips=(arr,cur,k)=>`<div class="chips">${arr.map(c=>`<button class="chip ${c===cur?'on':''}" data-chip="${k}" data-v="${esc(c)}">${c}</button>`).join('')}</div>`;
+const prodCard=p=>`<div class="card link" data-go="p/${p.id}">${heart(p.id)}<div class="ph">Фото жоқ</div><span class="badge">Демо тауар</span><h3>${p.n}</h3><span class="price">${fmt(p.p)}</span></div>`;
+const cartCount=()=>S.cart.reduce((a,i)=>a+i.q,0);
+const total=()=>S.cart.reduce((a,i)=>a+i.q*findP(i.id).p,0);
+
+const pages={
+'':()=>`<section class="hero"><h1>Сәлем! Мен — Эльмира.</h1><p>Мен — инженерлік тәжірибесін білім берумен ұштастырған оқытушымын. Бұл сайтта өзім туралы, геодезия мен маркшейдерлік іс бағытындағы жұмысым, оқу материалдарым және кәсіпкерлік жобаларым туралы бөлісемін.</p>
+<div class="row"><button class="btn" data-go="about">Менімен танысу</button><button class="btn ghost" data-go="edu">Оқу материалдары</button><button class="btn ghost" data-go="shop">Дүкенге кіру</button></div></section>
+<h2>Бір кеңістікте — үш бағыт</h2><div class="grid">
+${card('Менің жолым','Инженерлік жұмыстан оқытушылыққа дейінгі тәжірибеммен танысыңыз.','Толығырақ','about')}
+${card('Білім және тәжірибе','Геодезия, картография және маркшейдерлік іс бойынша түсінікті материалдар.','Материалдарды көру','edu')}
+${card('ELMIRA дүкені','Күнделікті өмірге арналған тауарларды бір жерден таңдаңыз.','Каталогты ашу','shop')}</div>`,
+about:()=>`<div class="av">ЭТ</div><h1>Эльмира Таттымбетова</h1><p style="font-size:1.1rem;color:var(--pr);font-weight:600">Инженер. Оқытушы. Кәсіпкер.</p>
+<p>Менің толық аты-жөнім — Таттымбетова Эльмира Танатаровна. Қарағанды қаласында тұрамын.</p>
+<p>1999–2004 жылдары Қарағанды мемлекеттік техникалық университетінде “Маркшейдерлік іс” мамандығы бойынша білім алдым.</p>
+<p>2004–2023 жылдары инженер болып жұмыс істедім. Осы 19 жылда жинаған өндірістік тәжірибемді қазір оқытушылық қызметімде қолданамын.</p>
+<p>2024 жылдан бастап арнайы пәндерді оқытуға кірістім. Инновациялық технологиялар колледжінде жұмыс істеп, оқу-өндірістік жұмысты ұйымдастыруға да қатыстым.</p>
+<p>2026 жылдың қыркүйегінен бастап университеттің “Маркшейдерлік іс және геодезия” кафедрасында аға оқытушы болып жұмыс істеймін.</p>
+<p>Мен үшін күрделі тақырыпты қарапайым тілмен түсіндіру маңызды. Сабақтарымда есептің жауабымен бірге оның қалай шығарылатынын және өндірісте не үшін қажет екенін көрсетуге тырысамын.</p>
+<p>Оқытушылықпен қатар кәсіпкерлікпен айналысамын. Осы сайт білім беру жұмысым мен кәсіпкерлік жобаларымды бір жерге жинақтау үшін жасалды.</p>
+<div class="stats"><div><b>19 жыл</b>инженерлік тәжірибе</div><div><b>2024 жылдан</b>оқытушылық қызмет</div><div><b>Қарағанды</b>жұмыс істейтін қалам</div></div>
+<h2>Менің негізгі бағыттарым</h2><ul class="dir"><li>Геодезия және геодезиялық өлшеулер.</li><li>Маркшейдерлік іс.</li><li>Карталармен және жер бедерімен жұмыс.</li><li>Зертханалық жұмыстар мен есептер.</li><li>Оқу-әдістемелік материалдар.</li><li>Онлайн сауда.</li></ul>`,
+edu:()=>{const l=MAT.filter(m=>S.ecat==='Барлығы'||m.c===S.ecat);
+return`<h1>Күрделі тақырыптарды қарапайым қадамдармен үйреніңіз</h1><p style="color:var(--mut)">Бұл бөлімде геодезия, картография және маркшейдерлік іс бойынша оқу материалдары жинақталады. Әр материал тақырыпты түсінуге, есепті орындауға және білімді тәжірибеде қолдануға көмектеседі.</p>
+${chips(ECATS,S.ecat,'ecat')}
+${l.length?`<div class="grid">${l.map(m=>`<div class="card"><span class="badge">Дайындалуда</span><h3>${m.t}</h3><p>${m.d}</p><small style="color:var(--mut)">${m.c}</small></div>`).join('')}</div>`:'<div class="empty">Бұл санатта материалдар әзірге жоқ.</div>'}
+<div class="msg note">Ақылы курстар әзірге қосылмаған. Курс қосылғанда бағдарлама, баға, ұзақтық және таныстыру сабағы осы жерде көрінеді.</div>`},
+shop:()=>{const l=PROD.filter(p=>S.scat==='Барлығы'||p.c===S.scat);
+return`<h1>ELMIRA дүкені</h1><p style="color:var(--mut)">Өзіңізге қажетті тауарды таңдаңыз. Сипаттамасын, үйлесімділігін және жеткізу шарттарын тапсырыс бермес бұрын қарап шығыңыз.</p>
+${chips(SCATS,S.scat,'scat')}
+${l.length?`<div class="grid">${l.map(prodCard).join('')}</div>`:'<div class="empty">Бұл бөлімге тауарлар жақында қосылады.</div>'}
+<div class="msg note">Көрсетілген тауарлар — тек сынақ үшін (демо). Нақты тауарлар, фото және бағалар кейін қосылады.</div>`},
+p:id=>{const p=findP(id);if(!p)return pages[404]();
+const o=p.models||p.colors;
+return`<button class="btn ghost sm" data-go="shop">← Каталог</button><div class="card" style="margin-top:1rem">${heart(p.id)}<div class="ph" style="height:200px">Фото жоқ (демо)</div>
+<span class="badge">Демо тауар</span><h1 style="font-size:1.6rem">${p.n}</h1><span class="price">${fmt(p.p)}</span><p>${p.d}</p>
+${o?`<label for="opt">${p.models?'Телефон моделі':'Қолжетімді нұсқалар'}</label><select id="opt"><option value="">${p.models?'Модельді таңдаңыз':'Нұсқаны таңдаңыз'}</option>${o.map(x=>`<option>${x}</option>`).join('')}</select>`:''}
+<div id="perr"></div>
+<p style="margin-top:1rem;font-size:.9rem;color:var(--mut)"><b>Жеткізу:</b> жеткізу шарттары әзірге енгізілмеген (демо).</p>
+<button class="btn" data-add="${p.id}">Себетке қосу</button></div>`},
+projects:()=>`<h1>Менің жұмыс бағыттарым мен жобаларым</h1><div class="grid">
+${card('Оқу материалдары','Студенттерге арналған түсіндірмелер, есептер және зертханалық жұмыс нұсқаулықтары.','Білім бөліміне өту','edu')}
+${card('Практикаға бағытталған оқыту','Теорияны өлшеу, есептеу және сызба жұмыстарымен байланыстыру.','Сұрақ қою','ask')}
+${card('Кәсіпкерлік','Тауарларды таныстыру және онлайн сатылымды дамыту.','Дүкенді ашу','shop')}</div>
+<div class="msg note">Орындалған жобалар туралы нақты материалдар кейін қосылады.</div>`,
+contact:()=>{const pr=S.pre;S.pre=null;return`<h1>Маған жазыңыз</h1><p style="color:var(--mut)">Оқу материалдары, тауарлар немесе серіктестік бойынша сұрағыңыз бар ма? Төмендегі форманы толтырыңыз.</p>
+<form data-form="contact"><label>Атыңыз</label><input name="n" required><label>Электрондық поштаңыз</label><input name="e" type="email" required>
+<label>Тақырып</label><select name="s">${['Оқу туралы','Тапсырыс туралы','Серіктестік','Басқа сұрақ'].map(x=>`<option ${pr&&x===pr.s?'selected':''}>${x}</option>`).join('')}</select>
+<label>Хабарлама</label><textarea name="m" rows="5" required>${pr?esc(pr.m):''}</textarea><div id="fm"></div><button class="btn" style="margin-top:.8rem">Хабарламаны жіберу</button></form>
+<div class="msg note">Демо: сервер қосылмаған, хабарлама ешқайда жіберілмейді.</div>`},
+cart:()=>{if(!S.cart.length)return`<h1>Себет</h1><div class="empty">Себетіңіз әзірге бос. Ұнаған тауарды каталогтан таңдаңыз.<div class="row" style="justify-content:center"><button class="btn" data-go="shop">Каталогқа өту</button></div></div>`;
+return`<h1>Себет</h1>${S.cart.map((i,x)=>{const p=findP(i.id);return`<div class="item"><div><b>${p.n}</b>${i.o?`<br><small>${esc(i.o)}</small>`:''}<br><span class="price" style="font-size:1rem">${fmt(p.p)}</span></div><div class="q"><button data-q="${x}" data-d="-1">−</button>${i.q}<button data-q="${x}" data-d="1">+</button></div></div>`}).join('')}
+<h2>Жалпы сома: ${fmt(total())}</h2>
+<form data-form="order"><label>Аты-жөніңіз</label><input name="n" required value="${esc(S.user?.name||'')}"><label>Телефон нөмірі</label><input name="t" type="tel" required>
+<label>Жеткізу тәсілі</label><select name="d" id="dm"><option>Өзім алып кетемін</option><option>Мекенжайға жеткізу</option></select>
+<div id="ad" hidden><label>Мекенжай</label><input name="a"></div><div id="om"></div>
+<button class="btn" style="margin-top:.8rem">Тапсырысты демо режимде сақтау</button></form>
+<div class="msg note">Төлем жүйесі қосылмаған: төлем қабылданбайды. Тапсырыс «төленбеген» күйінде тек осы браузерде сақталады.</div>
+<div class="row"><button class="btn ghost" data-go="shop">Каталогқа өту</button></div>`},
+account:()=>{const u=S.user;
+if(!u)return`<h1>ELMIRA кеңістігіне қош келдіңіз!</h1><div class="tabs"><button class="chip ${S.authTab==='in'?'on':''}" data-auth="in">Кіру</button><button class="chip ${S.authTab==='up'?'on':''}" data-auth="up">Тіркелу</button></div>
+<form data-form="${S.authTab}">${S.authTab==='up'?'<label>Аты</label><input name="n" required>':''}<label>Электрондық пошта</label><input name="e" type="email" required><label>Құпиясөз</label><input name="p" type="password" required minlength="6"><div id="am"></div><button class="btn" style="margin-top:.8rem">${S.authTab==='up'?'Тіркелу':'Кіру'}</button></form>
+<div class="msg note">Демо: нақты тіркелу серверсіз жұмыс істемейді. Деректер тек осы браузерде сақталады, құпиясөз тексерілмейді және сақталмайды.</div>`;
+const T=[['courses','Менің курстарым'],['orders','Менің тапсырыстарым'],['favs','Таңдаулылар'],['profile','Профиль']];
+let b='';
+if(S.tab==='courses')b=`<div class="empty">Сіз әлі курсқа жазылмадыңыз.<div class="row" style="justify-content:center"><button class="btn" data-go="edu">Курстарды көру</button></div></div>`;
+if(S.tab==='orders')b=S.orders.length?S.orders.map(o=>`<div class="card" style="margin:.6rem 0"><b>${o.date}</b><p>${o.items}</p><b>${fmt(o.sum)}</b> <small>· ${o.st}</small></div>`).join(''):`<div class="empty">Сізде әзірге тапсырыс жоқ.<div class="row" style="justify-content:center"><button class="btn" data-go="shop">Дүкенге өту</button></div></div>`;
+if(S.tab==='favs'){const f=S.fav.map(findP).filter(Boolean);b=f.length?`<div class="grid">${f.map(prodCard).join('')}</div>`:'<div class="empty">Таңдаулылар тізімі бос. Тауар карточкасындағы ♡ белгісін басыңыз.</div>'}
+if(S.tab==='profile')b=`<div class="card"><p>Аты: <b>${esc(u.name)}</b></p><p>Пошта: <b>${esc(u.email)}</b></p></div><div class="row"><button class="btn ghost" data-logout>Шығу</button></div>`;
+return`<h1>Сәлем, ${esc(u.name)}!</h1><div class="tabs">${T.map(t=>`<button class="chip ${S.tab===t[0]?'on':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}<button class="chip" data-logout>Шығу</button></div>${b}`},
+404:()=>`<div class="empty"><h1>Бұл бет табылмады.</h1><button class="btn" data-go="">Басты бетке қайту</button></div>`
+};
+
+function R(){
+const h=decodeURIComponent(location.hash.replace(/^#\/?/,'')),[r,a]=h.split('/');
+const f=pages[r];
+app.innerHTML=`<div class="page">${f?f(a):pages[404]()}</div>`;
+$('#nav').innerHTML=NAV.map(n=>`<button data-go="${n[0]}" class="${n[0]===r?'on':''}">${n[1]}</button>`).join('');
+const c=cartCount(),cc=$('#cc');cc.textContent=c;cc.hidden=!c;scrollTo(0,0);
+}
+const go=p=>{location.hash='#/'+p};
+addEventListener('hashchange',R);
+
+function openSearch(){
+$('#ovr').innerHTML=`<div class="ov" data-close><div class="box"><label for="sq" style="margin:0 0 .4rem;font-size:1rem;color:var(--ink)">Не іздеп жүрсіз?</label><input id="sq" autocomplete="off" autofocus><div id="sr" style="margin-top:1rem"></div></div></div>`;
+$('#sq').focus();
+}
+function doSearch(q){
+q=q.trim().toLowerCase();const o=$('#sr');if(!q){o.innerHTML='';return}
+const m=(...x)=>x.join(' ').toLowerCase().includes(q);
+const P=PROD.filter(p=>m(p.n,p.c,p.d)),C=COURSES.filter(c=>m(c.t,c.d)),M=MAT.filter(x=>m(x.t,x.d,x.c));
+const sec=(t,l)=>l.length?`<h3>${t}</h3>${l.join('')}`:'';
+const row=(t,g)=>`<div class="item" style="cursor:pointer" data-go="${g}" data-close2>${t}</div>`;
+o.innerHTML=(P.length+C.length+M.length)?sec('Тауарлар',P.map(p=>row(p.n,'p/'+p.id)))+sec('Курстар',C.map(c=>row(c.t,'edu')))+sec('Материалдар',M.map(x=>row(x.t+' <small>(Дайындалуда)</small>','edu'))):'<div class="empty">Сұрауыңыз бойынша ештеңе табылмады. Басқа сөзбен іздеп көріңіз.</div>';
+}
+addEventListener('input',e=>{if(e.target.id==='sq')doSearch(e.target.value);if(e.target.id==='dm'){} });
+addEventListener('change',e=>{if(e.target.id==='dm')$('#ad').hidden=e.target.value!=='Мекенжайға жеткізу'});
+
+addEventListener('click',e=>{
+const t=e.target,q=s=>t.closest(s);
+let el;
+if(q('[data-fav]')){e.stopPropagation();const id=q('[data-fav]').dataset.fav,i=S.fav.indexOf(id);i<0?S.fav.push(id):S.fav.splice(i,1);save();document.querySelectorAll(`[data-fav="${id}"]`).forEach(b=>b.textContent=i<0?'♥':'♡');if(S.tab==='favs'&&location.hash.includes('account'))R();return}
+if(q('[data-search]'))return openSearch();
+if(t.matches('.ov')){$('#ovr').innerHTML='';return}
+if(el=q('[data-go]')){const g=el.dataset.go;$('#ovr').innerHTML='';if(g==='ask'){S.pre={s:'Оқу туралы',m:'Практикаға бағытталған оқыту бойынша сұрағым бар: '};go('contact')}else go(g);return}
+if(el=q('[data-chip]')){S[el.dataset.chip]=el.dataset.v;R();return}
+if(el=q('[data-tab]')){S.tab=el.dataset.tab;R();return}
+if(el=q('[data-auth]')){S.authTab=el.dataset.auth;R();return}
+if(q('[data-logout]')){S.user=null;save();R();return}
+if(el=q('[data-q]')){const i=+el.dataset.q;S.cart[i].q+=+el.dataset.d;if(S.cart[i].q<1)S.cart.splice(i,1);save();R();return}
+if(el=q('[data-add]')){const p=findP(el.dataset.add),sel=$('#opt'),o=sel?sel.value:'';
+if(p.models&&!o){$('#perr').innerHTML='<div class="msg err">Алдымен телефон моделін таңдаңыз.</div>';return}
+const k=S.cart.find(i=>i.id===p.id&&i.o===o);k?k.q++:S.cart.push({id:p.id,o,q:1});save();
+const c=cartCount(),cc=$('#cc');cc.textContent=c;cc.hidden=false;
+$('#ovr').innerHTML=`<div class="ov"><div class="box"><h3>Тауар себетке қосылды.</h3><div class="row"><button class="btn ghost" data-go="shop">Сатып алуды жалғастыру</button><button class="btn" data-go="cart">Себетке өту</button></div></div></div>`}
+});
+
+addEventListener('submit',e=>{
+e.preventDefault();const f=e.target,k=f.dataset.form,d=Object.fromEntries(new FormData(f));
+if(k==='contact'){$('#fm').innerHTML='<div class="msg err">Хабарлама жіберілмеді. Қайталап көріңіз.<br><small>(Демо: сервер қосылмаған, сондықтан хабарлама жіберу мүмкін емес.)</small></div>'}
+if(k==='order'){if(d.d==='Мекенжайға жеткізу'&&!(d.a||'').trim()){$('#om').innerHTML='<div class="msg err">Жеткізу үшін мекенжайды енгізіңіз.</div>';return}
+S.orders.unshift({date:new Date().toLocaleString('kk-KZ'),items:S.cart.map(i=>findP(i.id).n+(i.o?' ('+i.o+')':'')+' × '+i.q).join(', '),sum:total(),st:'Төленбеген (демо, төлем жүйесі қосылмаған)'});
+S.cart=[];save();S.tab='orders';
+$('#om').innerHTML='';app.innerHTML=`<div class="page"><h1>Тапсырыс демо режимде сақталды</h1><div class="msg note">Төлем жүйесі қосылмаған, сондықтан төлем өткен жоқ. Тапсырыс «Менің тапсырыстарым» бөлімінде көрінеді.</div><div class="row"><button class="btn" data-go="account">Тапсырыстарым</button><button class="btn ghost" data-go="shop">Каталогқа өту</button></div></div>`;R2();}
+if(k==='up'){if(S.users.find(u=>u.email===d.e)){$('#am').innerHTML='<div class="msg err">Бұл пошта тіркелген. «Кіру» бөліміне өтіңіз.</div>';return}
+const u={name:d.n.trim(),email:d.e};S.users.push(u);S.user=u;save();R()}
+if(k==='in'){const u=S.users.find(u=>u.email===d.e);if(!u){$('#am').innerHTML='<div class="msg err">Бұл пошта табылмады. Алдымен «Тіркелу» бөліміне өтіңіз (демо).</div>';return}S.user=u;save();R()}
+});
+function R2(){const c=$('#cc');c.hidden=true}
+R();
+</script>
+</body>
+</html>
