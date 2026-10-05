@@ -65,51 +65,68 @@ form{max-width:480px}
 .tabs{display:flex;gap:.4rem;margin-bottom:.5rem;overflow-x:auto}
 .empty{text-align:center;padding:2rem 1rem;color:var(--mut)}
 footer{text-align:center;color:var(--mut);font-size:.82rem;padding:1rem}
+.big{padding:1.6rem;min-height:180px;text-decoration:none;color:inherit;justify-content:space-between}.off{opacity:.65}.btn[disabled]{opacity:.5;cursor:not-allowed}.card.big .btn{text-align:center;text-decoration:none}
 </style>
 </head>
 <body>
-<div class="demo">Демо нұсқа: сервер, төлем жүйесі және хабарлама жіберу әзірге қосылмаған.</div>
+<div class="demo" id="db">Сервер әлі қосылмаған: тіркелу, курстар және хабарлама жіберу жұмыс істемейді; онлайн төлем қосылмаған.</div>
 <header>
 <div class="top">
 <button class="logo" data-go="" aria-label="Басты бет">ELMIRA <span>★</span></button>
 <div class="ic">
 <button class="ib" data-search aria-label="Іздеу">🔍</button>
-<button class="ib" data-go="cart" aria-label="Себет">🛒<span class="cnt" id="cc" hidden></span></button>
+
 <button class="ib" data-go="account" aria-label="Жеке кабинет">👤</button>
 </div></div>
 <nav id="nav"></nav>
 </header>
 <main id="app"></main>
-<footer>© ELMIRA · демо нұсқа</footer>
+<footer>© ELMIRA · <button class="chip" id="adm" data-go="admin">Әкімші</button></footer>
 <div id="ovr"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+/* ↓ Нақты дүкен сілтемелерін осы жерге қойыңыз (әкімші панелі дайын жолды береді) */
+const CONFIG={kaspi:"https://kaspi.kz/shop/info/merchant/13531014/address-tab/?merchantId=13531014&productCode=129311460&baseProductCode=&tabId=PRODUCT&srsltid=AU7gw4VxViUqtm8wdeUvtWB3wErpQYfp_MdLmeh5YWn3sK6RZhpGQaDm",wb:"https://www.wildberries.am/seller/1042107",
+/* Supabase: Project URL және anon public key (ашық кілт) — құпия service_role кілтін ЕШҚАШАН қоймаңыз */
+supabaseUrl:"",supabaseKey:""};
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const S={cart:[],fav:[],user:null,users:[],orders:[],tab:'courses',ecat:'Барлығы',scat:'Барлығы',pre:null,authTab:'in'};
+const S={links:{},fav:[],user:null,users:[],tab:'courses',ecat:'Барлығы',pre:null,authTab:'in'};
 try{Object.assign(S,JSON.parse(localStorage.getItem('elmira')||'{}'))}catch(e){}
-const save=()=>{try{localStorage.setItem('elmira',JSON.stringify({cart:S.cart,fav:S.fav,user:S.user,users:S.users,orders:S.orders}))}catch(e){}};
-const fmt=n=>n.toLocaleString('ru-RU')+' ₸';
+const save=()=>{try{localStorage.setItem('elmira',JSON.stringify({links:S.links,fav:S.fav,user:S.user,users:S.users}))}catch(e){}};
+const okU=(k,u)=>{try{const h=new URL(u);return h.protocol==='https:'&&(k==='kaspi'?/(^|\.)kaspi\.kz$/.test(h.hostname):/(^|\.)(wildberries\.(ru|kz|by|kg|am|uz|ge|com)|wb\.ru)$/.test(h.hostname))}catch(e){return false}};
+const links=()=>{const r={};for(const k of['kaspi','wb']){const u=(S.links&&S.links[k])||CONFIG[k]||'';r[k]=okU(k,u)?u:''}return r};
+const sb=(CONFIG.supabaseUrl&&CONFIG.supabaseKey&&window.supabase)?supabase.createClient(CONFIG.supabaseUrl,CONFIG.supabaseKey,{auth:{flowType:'pkce'}}):null;
+const dbErr=e=>'<div class="msg err">Қате: '+esc(e.message||e)+'</div>';
+async function loadSession(){if(!sb)return;const {data}=await sb.auth.getSession();const u=data.session&&data.session.user;
+if(!u){S.user=null;return}const {data:p}=await sb.from('profiles').select('name,role').eq('id',u.id).maybeSingle();S.user={id:u.id,email:u.email,name:(p&&p.name)||u.email,role:(p&&p.role)||'user'}}
+async function authAct(k,d){const m=h=>{$('#am').innerHTML=h},back=location.origin+location.pathname;
+if(k==='up'){const {error}=await sb.auth.signUp({email:d.e,password:d.p,options:{data:{name:d.n.trim()},emailRedirectTo:back}});return m(error?dbErr(error):'<div class="msg">Тіркелу сәтті. Растау хаты келсе, поштадағы сілтемені басып, «Кіру» бөліміне өтіңіз.</div>')}
+if(k==='in'){const {error}=await sb.auth.signInWithPassword({email:d.e,password:d.p});if(error)return m(dbErr(error));await loadSession();return R()}
+if(k==='reset'){const {error}=await sb.auth.resetPasswordForEmail(d.e,{redirectTo:back});return m(error?dbErr(error):'<div class="msg">Егер пошта тіркелген болса, қалпына келтіру сілтемесі жіберілді.</div>')}
+if(k==='newpw'){const {error}=await sb.auth.updateUser({password:d.p});if(error)return m(dbErr(error));S.recovery=false;S.authTab='in';await loadSession();R()}}
+async function adminAct(k,d,f){const m={addc:'#m2',addl:'#m3',grant:'#m4'}[k],o=h=>{$(m).innerHTML=h};let r;
+if(k==='addc')r=await sb.from('courses').insert({title:d.t,description:d.d,price:+d.p||0,duration:d.u});
+if(k==='addl')r=await sb.from('lessons').insert({course_id:d.c,title:d.t,content:d.b,position:+d.o||0});
+if(k==='grant'){const {data:p}=await sb.from('profiles').select('id').eq('email',d.e.trim()).maybeSingle();if(!p)return o('<div class="msg err">Бұл поштамен пайдаланушы табылмады. Ол алдымен тіркелуі керек.</div>');r=await sb.from('enrollments').upsert({user_id:p.id,course_id:d.c})}
+if(r.error)return o(dbErr(r.error));o('<div class="msg">Сақталды.</div>');f.reset();hooks.admin()}
+const cfgLine=()=>{const L=links();return 'const CONFIG={kaspi:'+JSON.stringify(L.kaspi)+',wb:'+JSON.stringify(L.wb)+'};'};
 const NAV=[['','Басты бет'],['about','Эльмира туралы'],['edu','Білім'],['shop','Дүкен'],['projects','Жобалар'],['contact','Байланыс']];
 const ECATS=['Барлығы','Геодезия','Картография','Маркшейдерлік іс','AutoCAD','Зертханалық жұмыстар'];
-const SCATS=['Барлығы','Телефон аксессуарлары','Күтім және косметика','Үйге арналған тауарлар','Жинақтар'];
+
 const MAT=[
 {id:'m1',t:'Карта масштабы: ұзындық пен ауданды есептеу',d:'Масштабты түсіну және картадағы өлшемдерді жер бетіндегі қашықтыққа айналдыру.',c:'Картография'},
 {id:'m2',t:'Жер бедері және горизонтальдар',d:'Нүкте биіктігін анықтау, беткейдің тіктігін түсіну және профиль құру.',c:'Картография'},
 {id:'m3',t:'Теодолит: құрылымы және өлшеу тәртібі',d:'Аспаптың негізгі бөліктері және далалық жұмыстың орындалу реті.',c:'Геодезия'},
 {id:'m4',t:'AutoCAD-та алғашқы геодезиялық сызба',d:'Координаталармен жұмыс істеуге және алғашқы сызбаны орындауға кіріспе.',c:'AutoCAD'}];
 const COURSES=[];
-/* ДЕМО тауарлар: сынау үшін ғана. Нақты тауарлар басқару панелінен қосылады. */
-const PROD=[
-{id:'p1',n:'Телефон қабы',c:'Телефон аксессуарлары',p:2500,d:'Демо сипаттама: қорғаныш қап. Нақты сипаттама мен фото кейін қосылады.',models:['iPhone 13','iPhone 14','Samsung Galaxy S23','Xiaomi Redmi Note 12']},
-{id:'p2',n:'Үй органайзері',c:'Үйге арналған тауарлар',p:4000,d:'Демо сипаттама: жиынтық сақтау жәшігі. Нақты сипаттама мен фото кейін қосылады.',colors:['Ақ','Сұр','Бежевый']}];
-const findP=id=>PROD.find(p=>p.id===id);
 const heart=id=>`<button class="hb" data-fav="${id}" aria-label="Таңдаулыларға">${S.fav.includes(id)?'♥':'♡'}</button>`;
 const card=(t,d,b,g)=>`<div class="card"><h3>${t}</h3><p>${d}</p><button class="btn sm" data-go="${g}" style="align-self:flex-start">${b}</button></div>`;
 const chips=(arr,cur,k)=>`<div class="chips">${arr.map(c=>`<button class="chip ${c===cur?'on':''}" data-chip="${k}" data-v="${esc(c)}">${c}</button>`).join('')}</div>`;
-const prodCard=p=>`<div class="card link" data-go="p/${p.id}">${heart(p.id)}<div class="ph">Фото жоқ</div><span class="badge">Демо тауар</span><h3>${p.n}</h3><span class="price">${fmt(p.p)}</span></div>`;
-const cartCount=()=>S.cart.reduce((a,i)=>a+i.q,0);
-const total=()=>S.cart.reduce((a,i)=>a+i.q*findP(i.id).p,0);
+
+
+
 
 const pages={
 '':()=>`<section class="hero"><h1>Сәлем! Мен — Эльмира.</h1><p>Мен — инженерлік тәжірибесін білім берумен ұштастырған оқытушымын. Бұл сайтта өзім туралы, геодезия мен маркшейдерлік іс бағытындағы жұмысым, оқу материалдарым және кәсіпкерлік жобаларым туралы бөлісемін.</p>
@@ -117,7 +134,7 @@ const pages={
 <h2>Бір кеңістікте — үш бағыт</h2><div class="grid">
 ${card('Менің жолым','Инженерлік жұмыстан оқытушылыққа дейінгі тәжірибеммен танысыңыз.','Толығырақ','about')}
 ${card('Білім және тәжірибе','Геодезия, картография және маркшейдерлік іс бойынша түсінікті материалдар.','Материалдарды көру','edu')}
-${card('ELMIRA дүкені','Күнделікті өмірге арналған тауарларды бір жерден таңдаңыз.','Каталогты ашу','shop')}</div>`,
+${card('ELMIRA дүкені','Күнделікті өмірге арналған тауарларды бір жерден таңдаңыз.','Дүкенге өту','shop')}</div>`,
 about:()=>`<div class="av">ЭТ</div><h1>Эльмира Таттымбетова</h1><p style="font-size:1.1rem;color:var(--pr);font-weight:600">Инженер. Оқытушы. Кәсіпкер.</p>
 <p>Менің толық аты-жөнім — Таттымбетова Эльмира Танатаровна. Қарағанды қаласында тұрамын.</p>
 <p>1999–2004 жылдары Қарағанды мемлекеттік техникалық университетінде “Маркшейдерлік іс” мамандығы бойынша білім алдым.</p>
@@ -131,21 +148,11 @@ about:()=>`<div class="av">ЭТ</div><h1>Эльмира Таттымбетова
 edu:()=>{const l=MAT.filter(m=>S.ecat==='Барлығы'||m.c===S.ecat);
 return`<h1>Күрделі тақырыптарды қарапайым қадамдармен үйреніңіз</h1><p style="color:var(--mut)">Бұл бөлімде геодезия, картография және маркшейдерлік іс бойынша оқу материалдары жинақталады. Әр материал тақырыпты түсінуге, есепті орындауға және білімді тәжірибеде қолдануға көмектеседі.</p>
 ${chips(ECATS,S.ecat,'ecat')}
-${l.length?`<div class="grid">${l.map(m=>`<div class="card"><span class="badge">Дайындалуда</span><h3>${m.t}</h3><p>${m.d}</p><small style="color:var(--mut)">${m.c}</small></div>`).join('')}</div>`:'<div class="empty">Бұл санатта материалдар әзірге жоқ.</div>'}
-<div class="msg note">Ақылы курстар әзірге қосылмаған. Курс қосылғанда бағдарлама, баға, ұзақтық және таныстыру сабағы осы жерде көрінеді.</div>`},
-shop:()=>{const l=PROD.filter(p=>S.scat==='Барлығы'||p.c===S.scat);
-return`<h1>ELMIRA дүкені</h1><p style="color:var(--mut)">Өзіңізге қажетті тауарды таңдаңыз. Сипаттамасын, үйлесімділігін және жеткізу шарттарын тапсырыс бермес бұрын қарап шығыңыз.</p>
-${chips(SCATS,S.scat,'scat')}
-${l.length?`<div class="grid">${l.map(prodCard).join('')}</div>`:'<div class="empty">Бұл бөлімге тауарлар жақында қосылады.</div>'}
-<div class="msg note">Көрсетілген тауарлар — тек сынақ үшін (демо). Нақты тауарлар, фото және бағалар кейін қосылады.</div>`},
-p:id=>{const p=findP(id);if(!p)return pages[404]();
-const o=p.models||p.colors;
-return`<button class="btn ghost sm" data-go="shop">← Каталог</button><div class="card" style="margin-top:1rem">${heart(p.id)}<div class="ph" style="height:200px">Фото жоқ (демо)</div>
-<span class="badge">Демо тауар</span><h1 style="font-size:1.6rem">${p.n}</h1><span class="price">${fmt(p.p)}</span><p>${p.d}</p>
-${o?`<label for="opt">${p.models?'Телефон моделі':'Қолжетімді нұсқалар'}</label><select id="opt"><option value="">${p.models?'Модельді таңдаңыз':'Нұсқаны таңдаңыз'}</option>${o.map(x=>`<option>${x}</option>`).join('')}</select>`:''}
-<div id="perr"></div>
-<p style="margin-top:1rem;font-size:.9rem;color:var(--mut)"><b>Жеткізу:</b> жеткізу шарттары әзірге енгізілмеген (демо).</p>
-<button class="btn" data-add="${p.id}">Себетке қосу</button></div>`},
+${l.length?`<div class="grid">${l.map(m=>`<div class="card">${heart(m.id)}<span class="badge">Дайындалуда</span><h3>${m.t}</h3><p>${m.d}</p><small style="color:var(--mut)">${m.c}</small></div>`).join('')}</div>`:'<div class="empty">Бұл санатта материалдар әзірге жоқ.</div>'}
+<div id="crs">${sb?'':'<div class="msg note">Курстар сервер қосылғанда осы жерде көрінеді.</div>'}</div>`},
+shop:()=>{const L=links();
+const c=(n,u)=>u?`<a class="card link big" href="${esc(u)}" target="_blank" rel="noopener noreferrer"><h2>${n}</h2><span class="btn">${n} дүкеніне өту</span></a>`:`<div class="card big off"><h2>${n}</h2><span class="badge">Жақында қосылады</span><button class="btn" disabled>${n} дүкеніне өту</button></div>`;
+return`<h1>Қай жерден сатып алғыңыз келеді?</h1><div class="grid">${c('Kaspi',L.kaspi)}${c('Wildberries',L.wb)}</div><div class="msg note">Тауарды сатып алу таңдалған маркетплейс арқылы өтеді; сайтта себет пен төлем жоқ. Компьютерде дүкен жаңа қойындыда ашылады. Телефонда қолданба орнатылған болса, сілтеме көбіне соның өзінде ашылады, болмаса браузерде.</div>`},
 projects:()=>`<h1>Менің жұмыс бағыттарым мен жобаларым</h1><div class="grid">
 ${card('Оқу материалдары','Студенттерге арналған түсіндірмелер, есептер және зертханалық жұмыс нұсқаулықтары.','Білім бөліміне өту','edu')}
 ${card('Практикаға бағытталған оқыту','Теорияны өлшеу, есептеу және сызба жұмыстарымен байланыстыру.','Сұрақ қою','ask')}
@@ -155,36 +162,57 @@ contact:()=>{const pr=S.pre;S.pre=null;return`<h1>Маған жазыңыз</h1>
 <form data-form="contact"><label>Атыңыз</label><input name="n" required><label>Электрондық поштаңыз</label><input name="e" type="email" required>
 <label>Тақырып</label><select name="s">${['Оқу туралы','Тапсырыс туралы','Серіктестік','Басқа сұрақ'].map(x=>`<option ${pr&&x===pr.s?'selected':''}>${x}</option>`).join('')}</select>
 <label>Хабарлама</label><textarea name="m" rows="5" required>${pr?esc(pr.m):''}</textarea><div id="fm"></div><button class="btn" style="margin-top:.8rem">Хабарламаны жіберу</button></form>
-<div class="msg note">Демо: сервер қосылмаған, хабарлама ешқайда жіберілмейді.</div>`},
-cart:()=>{if(!S.cart.length)return`<h1>Себет</h1><div class="empty">Себетіңіз әзірге бос. Ұнаған тауарды каталогтан таңдаңыз.<div class="row" style="justify-content:center"><button class="btn" data-go="shop">Каталогқа өту</button></div></div>`;
-return`<h1>Себет</h1>${S.cart.map((i,x)=>{const p=findP(i.id);return`<div class="item"><div><b>${p.n}</b>${i.o?`<br><small>${esc(i.o)}</small>`:''}<br><span class="price" style="font-size:1rem">${fmt(p.p)}</span></div><div class="q"><button data-q="${x}" data-d="-1">−</button>${i.q}<button data-q="${x}" data-d="1">+</button></div></div>`}).join('')}
-<h2>Жалпы сома: ${fmt(total())}</h2>
-<form data-form="order"><label>Аты-жөніңіз</label><input name="n" required value="${esc(S.user?.name||'')}"><label>Телефон нөмірі</label><input name="t" type="tel" required>
-<label>Жеткізу тәсілі</label><select name="d" id="dm"><option>Өзім алып кетемін</option><option>Мекенжайға жеткізу</option></select>
-<div id="ad" hidden><label>Мекенжай</label><input name="a"></div><div id="om"></div>
-<button class="btn" style="margin-top:.8rem">Тапсырысты демо режимде сақтау</button></form>
-<div class="msg note">Төлем жүйесі қосылмаған: төлем қабылданбайды. Тапсырыс «төленбеген» күйінде тек осы браузерде сақталады.</div>
-<div class="row"><button class="btn ghost" data-go="shop">Каталогқа өту</button></div>`},
+${sb?'':'<div class="msg note">Сервер қосылмаған: хабарлама ешқайда жіберілмейді.</div>'}`},
 account:()=>{const u=S.user;
-if(!u)return`<h1>ELMIRA кеңістігіне қош келдіңіз!</h1><div class="tabs"><button class="chip ${S.authTab==='in'?'on':''}" data-auth="in">Кіру</button><button class="chip ${S.authTab==='up'?'on':''}" data-auth="up">Тіркелу</button></div>
-<form data-form="${S.authTab}">${S.authTab==='up'?'<label>Аты</label><input name="n" required>':''}<label>Электрондық пошта</label><input name="e" type="email" required><label>Құпиясөз</label><input name="p" type="password" required minlength="6"><div id="am"></div><button class="btn" style="margin-top:.8rem">${S.authTab==='up'?'Тіркелу':'Кіру'}</button></form>
-<div class="msg note">Демо: нақты тіркелу серверсіз жұмыс істемейді. Деректер тек осы браузерде сақталады, құпиясөз тексерілмейді және сақталмайды.</div>`;
-const T=[['courses','Менің курстарым'],['orders','Менің тапсырыстарым'],['favs','Таңдаулылар'],['profile','Профиль']];
+if(!u||S.recovery){const t=S.recovery?'newpw':S.authTab;
+return`<h1>ELMIRA кеңістігіне қош келдіңіз!</h1><div class="tabs"><button class="chip ${t==='in'?'on':''}" data-auth="in">Кіру</button><button class="chip ${t==='up'?'on':''}" data-auth="up">Тіркелу</button><button class="chip ${t==='reset'?'on':''}" data-auth="reset">Құпиясөзді қалпына келтіру</button></div>
+<form data-form="${t}">${t==='up'?'<label>Аты</label><input name="n" required>':''}${t==='newpw'?'':'<label>Электрондық пошта</label><input name="e" type="email" required>'}${t==='reset'?'':'<label>'+(t==='newpw'?'Жаңа құпиясөз':'Құпиясөз')+'</label><input name="p" type="password" required minlength="6">'}<div id="am"></div><button class="btn" style="margin-top:.8rem">${{in:'Кіру',up:'Тіркелу',reset:'Хатты жіберу',newpw:'Құпиясөзді сақтау'}[t]}</button></form>
+${sb?'':'<div class="msg note">Сервер әлі қосылмаған: нақты тіркелу, кіру және қалпына келтіру жұмыс істемейді. Төмендегі кіру тек осы браузерде сынау үшін, құпиясөз тексерілмейді.</div>'}`}
+const T=[['courses','Менің курстарым'],['favs','Таңдаулылар'],['profile','Профиль']];
 let b='';
-if(S.tab==='courses')b=`<div class="empty">Сіз әлі курсқа жазылмадыңыз.<div class="row" style="justify-content:center"><button class="btn" data-go="edu">Курстарды көру</button></div></div>`;
-if(S.tab==='orders')b=S.orders.length?S.orders.map(o=>`<div class="card" style="margin:.6rem 0"><b>${o.date}</b><p>${o.items}</p><b>${fmt(o.sum)}</b> <small>· ${o.st}</small></div>`).join(''):`<div class="empty">Сізде әзірге тапсырыс жоқ.<div class="row" style="justify-content:center"><button class="btn" data-go="shop">Дүкенге өту</button></div></div>`;
-if(S.tab==='favs'){const f=S.fav.map(findP).filter(Boolean);b=f.length?`<div class="grid">${f.map(prodCard).join('')}</div>`:'<div class="empty">Таңдаулылар тізімі бос. Тауар карточкасындағы ♡ белгісін басыңыз.</div>'}
+if(S.tab==='courses')b=sb?'<div id="myc">Жүктелуде…</div>':'<div class="empty">Сіз әлі курсқа жазылмадыңыз.<div class="row" style="justify-content:center"><button class="btn" data-go="edu">Курстарды көру</button></div></div>';
+
+if(S.tab==='favs'){const f=S.fav.map(id=>MAT.find(m=>m.id===id)).filter(Boolean);b=f.length?`<div class="grid">${f.map(m=>`<div class="card">${heart(m.id)}<span class="badge">Дайындалуда</span><h3>${m.t}</h3><p>${m.d}</p></div>`).join('')}</div>`:'<div class="empty">Таңдаулылар тізімі бос. Материал карточкасындағы ♡ белгісін басыңыз.</div>'}
 if(S.tab==='profile')b=`<div class="card"><p>Аты: <b>${esc(u.name)}</b></p><p>Пошта: <b>${esc(u.email)}</b></p></div><div class="row"><button class="btn ghost" data-logout>Шығу</button></div>`;
 return`<h1>Сәлем, ${esc(u.name)}!</h1><div class="tabs">${T.map(t=>`<button class="chip ${S.tab===t[0]?'on':''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}<button class="chip" data-logout>Шығу</button></div>${b}`},
+admin:()=>{if(!sb)return'<div class="empty"><h2>Әкімші панелі</h2><p>Ол сервер (Supabase) қосылғанда жұмыс істейді. Дүкен сілтемелері файлдағы CONFIG ішінде.</p></div>';
+if(!(S.user&&S.user.role==='admin'))return'<div class="empty"><h2>Қолжетімділік жоқ.</h2><p>Бұл бетке тек әкімші кіре алады.</p></div>';
+return`<h1>Әкімші панелі</h1><h2>Хабарламалар</h2><div id="am1">Жүктелуде…</div>
+<h2>Курс қосу</h2><form data-form="addc"><label>Атауы</label><input name="t" required><label>Сипаттамасы</label><textarea name="d" rows="3"></textarea><label>Бағасы (₸, 0 — тегін)</label><input name="p" type="number" min="0" value="0"><label>Ұзақтығы</label><input name="u"><div id="m2"></div><button class="btn" style="margin-top:.8rem">Курсты қосу</button></form>
+<h2>Сабақ қосу</h2><form data-form="addl"><label>Курс</label><select name="c" id="lc" required></select><label>Сабақ атауы</label><input name="t" required><label>Мәтін, мысалдар</label><textarea name="b" rows="6"></textarea><label>Реті</label><input name="o" type="number" value="1"><div id="m3"></div><button class="btn" style="margin-top:.8rem">Сабақты қосу</button></form>
+<h2>Қолжетімділік беру</h2><form data-form="grant"><label>Пайдаланушының поштасы</label><input name="e" type="email" required><label>Курс</label><select name="c" id="gc" required></select><div id="m4"></div><button class="btn" style="margin-top:.8rem">Қолжетімділік беру</button></form>
+<h2>Курстар</h2><div id="am2"></div>`},
+course:id=>`<button class="btn ghost sm" data-go="edu">← Білім</button><div id="cp" style="margin-top:1rem">Жүктелуде…</div>`,
 404:()=>`<div class="empty"><h1>Бұл бет табылмады.</h1><button class="btn" data-go="">Басты бетке қайту</button></div>`
 };
 
+const hooks={
+async edu(){const el=$('#crs');if(!sb||!el)return;const {data,error}=await sb.from('courses').select('*').eq('published',true).order('created_at');
+if(error){el.innerHTML=dbErr(error);return}
+el.innerHTML=data.length?`<h2>Курстар</h2><div class="grid">${data.map(c=>`<div class="card"><h3>${esc(c.title)}</h3><p>${esc(c.description||'')}</p><small>${c.duration?esc(c.duration)+' · ':''}${c.price>0?c.price+' ₸':'Тегін'}</small><button class="btn sm" data-go="course/${c.id}" style="align-self:flex-start">Курсты ашу</button></div>`).join('')}</div>`:'<div class="msg note">Курстар әзірге қосылмаған. Әкімші қосқанда осы жерде көрінеді.</div>'},
+async course(id){const el=$('#cp');if(!sb){el.innerHTML='<div class="msg note">Курстар сервер қосылғанда жұмыс істейді.</div>';return}
+const {data:c}=await sb.from('courses').select('*').eq('id',id).maybeSingle();if(!c){el.innerHTML=pages[404]();return}
+const head=`<h1>${esc(c.title)}</h1><p>${esc(c.description||'')}</p><p><b>${c.price>0?c.price+' ₸':'Тегін'}</b>${c.duration?' · '+esc(c.duration):''}</p>`;
+if(!S.user){el.innerHTML=head+'<div class="msg">Курсты көру үшін кіріңіз.</div><button class="btn" data-go="account">Кіру немесе тіркелу</button>';return}
+const {data:en}=await sb.from('enrollments').select('course_id').eq('user_id',S.user.id).eq('course_id',id);
+if(S.user.role!=='admin'&&!(en&&en.length)){el.innerHTML=head+(c.price>0?`<div class="msg note">Бұл ақылы курс. Онлайн төлем әлі қосылмаған: қолжетімділікті әкімші береді.</div><button class="btn" data-ask="${esc(c.title)}">Қолжетімділік сұрау</button>`:`<button class="btn" data-enroll="${id}">Тегін жазылу</button>`);return}
+const [{data:L},{data:P}]=await Promise.all([sb.from('lessons').select('*').eq('course_id',id).order('position'),sb.from('progress').select('lesson_id').eq('user_id',S.user.id)]);
+const done=new Set((P||[]).map(x=>x.lesson_id));
+el.innerHTML=head+(L&&L.length?`<p>Өтілген: <b id="pc">${L.filter(l=>done.has(l.id)).length}</b> / ${L.length}</p>`+L.map(l=>`<details class="card" style="margin:.5rem 0"><summary><b>${esc(l.title)}</b></summary><div style="white-space:pre-wrap;margin:.6rem 0">${esc(l.content||'')}</div><label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" style="width:auto" data-prog="${l.id}" ${done.has(l.id)?'checked':''}> Сабақты өттім</label></details>`).join(''):'<div class="empty">Сабақтар әзірге қосылмаған.</div>')},
+async account(){const el=$('#myc');if(!sb||!el||!S.user)return;const {data,error}=await sb.from('enrollments').select('course_id,courses(title)').eq('user_id',S.user.id);
+el.innerHTML=error?dbErr(error):(data.length?data.map(e=>`<div class="item"><b>${esc((e.courses&&e.courses.title)||'Курс')}</b><button class="btn sm" data-go="course/${e.course_id}">Жалғастыру</button></div>`).join(''):'<div class="empty">Сіз әлі курсқа жазылмадыңыз.<div class="row" style="justify-content:center"><button class="btn" data-go="edu">Курстарды көру</button></div></div>')},
+async admin(){if(!sb||!(S.user&&S.user.role==='admin')||!$('#am1'))return;
+const [M,C]=await Promise.all([sb.from('messages').select('*').order('created_at',{ascending:false}),sb.from('courses').select('*').order('created_at',{ascending:false})]);
+$('#am1').innerHTML=M.error?dbErr(M.error):(M.data.length?M.data.map(m=>`<div class="card" style="margin:.5rem 0"><b>${esc(m.subject||'')}</b> · ${esc(m.name||'')} · <a href="mailto:${esc(m.email||'')}">${esc(m.email||'')}</a><p style="white-space:pre-wrap">${esc(m.body||'')}</p><small>${new Date(m.created_at).toLocaleString('kk-KZ')}</small></div>`).join(''):'<div class="empty">Хабарлама әзірге жоқ.</div>');
+const cs=C.data||[],opt=cs.map(c=>`<option value="${c.id}">${esc(c.title)}</option>`).join('');$('#lc').innerHTML=opt;$('#gc').innerHTML=opt;
+$('#am2').innerHTML=cs.length?cs.map(c=>`<div class="item"><div><b>${esc(c.title)}</b><br><small>${c.published?'Жарияланған':'Жарияланбаған (келушілерге көрінбейді)'}</small></div><button class="btn sm ghost" data-pub="${c.id}" data-v="${!c.published}">${c.published?'Жасыру':'Жариялау'}</button></div>`).join(''):'<div class="empty">Курс әзірге жоқ.</div>'}
+};
 function R(){
 const h=decodeURIComponent(location.hash.replace(/^#\/?/,'')),[r,a]=h.split('/');
 const f=pages[r];
 app.innerHTML=`<div class="page">${f?f(a):pages[404]()}</div>`;
 $('#nav').innerHTML=NAV.map(n=>`<button data-go="${n[0]}" class="${n[0]===r?'on':''}">${n[1]}</button>`).join('');
-const c=cartCount(),cc=$('#cc');cc.textContent=c;cc.hidden=!c;scrollTo(0,0);
+scrollTo(0,0);$('#adm').hidden=sb?!(S.user&&S.user.role==='admin'):false;$('#db').hidden=!!sb;if(hooks[r])hooks[r](a);
 }
 const go=p=>{location.hash='#/'+p};
 addEventListener('hashchange',R);
@@ -196,13 +224,13 @@ $('#sq').focus();
 function doSearch(q){
 q=q.trim().toLowerCase();const o=$('#sr');if(!q){o.innerHTML='';return}
 const m=(...x)=>x.join(' ').toLowerCase().includes(q);
-const P=PROD.filter(p=>m(p.n,p.c,p.d)),C=COURSES.filter(c=>m(c.t,c.d)),M=MAT.filter(x=>m(x.t,x.d,x.c));
+const C=COURSES.filter(c=>m(c.t,c.d)),M=MAT.filter(x=>m(x.t,x.d,x.c));
 const sec=(t,l)=>l.length?`<h3>${t}</h3>${l.join('')}`:'';
 const row=(t,g)=>`<div class="item" style="cursor:pointer" data-go="${g}" data-close2>${t}</div>`;
-o.innerHTML=(P.length+C.length+M.length)?sec('Тауарлар',P.map(p=>row(p.n,'p/'+p.id)))+sec('Курстар',C.map(c=>row(c.t,'edu')))+sec('Материалдар',M.map(x=>row(x.t+' <small>(Дайындалуда)</small>','edu'))):'<div class="empty">Сұрауыңыз бойынша ештеңе табылмады. Басқа сөзбен іздеп көріңіз.</div>';
+o.innerHTML=(C.length+M.length)?sec('Курстар',C.map(c=>row(c.t,'edu')))+sec('Материалдар',M.map(x=>row(x.t+' <small>(Дайындалуда)</small>','edu'))):'<div class="empty">Сұрауыңыз бойынша ештеңе табылмады. Басқа сөзбен іздеп көріңіз.</div>';
 }
-addEventListener('input',e=>{if(e.target.id==='sq')doSearch(e.target.value);if(e.target.id==='dm'){} });
-addEventListener('change',e=>{if(e.target.id==='dm')$('#ad').hidden=e.target.value!=='Мекенжайға жеткізу'});
+addEventListener('input',e=>{if(e.target.id==='sq')doSearch(e.target.value);});
+
 
 addEventListener('click',e=>{
 const t=e.target,q=s=>t.closest(s);
@@ -214,28 +242,31 @@ if(el=q('[data-go]')){const g=el.dataset.go;$('#ovr').innerHTML='';if(g==='ask')
 if(el=q('[data-chip]')){S[el.dataset.chip]=el.dataset.v;R();return}
 if(el=q('[data-tab]')){S.tab=el.dataset.tab;R();return}
 if(el=q('[data-auth]')){S.authTab=el.dataset.auth;R();return}
-if(q('[data-logout]')){S.user=null;save();R();return}
-if(el=q('[data-q]')){const i=+el.dataset.q;S.cart[i].q+=+el.dataset.d;if(S.cart[i].q<1)S.cart.splice(i,1);save();R();return}
-if(el=q('[data-add]')){const p=findP(el.dataset.add),sel=$('#opt'),o=sel?sel.value:'';
-if(p.models&&!o){$('#perr').innerHTML='<div class="msg err">Алдымен телефон моделін таңдаңыз.</div>';return}
-const k=S.cart.find(i=>i.id===p.id&&i.o===o);k?k.q++:S.cart.push({id:p.id,o,q:1});save();
-const c=cartCount(),cc=$('#cc');cc.textContent=c;cc.hidden=false;
-$('#ovr').innerHTML=`<div class="ov"><div class="box"><h3>Тауар себетке қосылды.</h3><div class="row"><button class="btn ghost" data-go="shop">Сатып алуды жалғастыру</button><button class="btn" data-go="cart">Себетке өту</button></div></div></div>`}
+if(q('[data-logout]')){S.user=null;save();if(sb)sb.auth.signOut();R();return}
+if(el=q('[data-enroll]')){sb.from('enrollments').insert({user_id:S.user.id,course_id:el.dataset.enroll}).then(r=>{if(r.error)alert(r.error.message);else R()});return}
+if(el=q('[data-ask]')){S.pre={s:'Оқу туралы',m:'«'+el.dataset.ask+'» курсына қолжетімділік сұраймын.'};go('contact');return}
+if(el=q('[data-pub]')){sb.from('courses').update({published:el.dataset.v==='true'}).eq('id',el.dataset.pub).then(()=>hooks.admin());return}
+if(q('[data-copy]')){const x=$('#cfg').textContent;try{navigator.clipboard.writeText(x).then(()=>{$('#lm').innerHTML='<div class="msg">Көшірілді.</div>'},()=>{$('#lm').innerHTML='<div class="msg err">Көшіру мүмкін болмады. Мәтінді қолмен таңдаңыз.</div>'})}catch(e){}}
 });
 
-addEventListener('submit',e=>{
+addEventListener('submit',async e=>{
 e.preventDefault();const f=e.target,k=f.dataset.form,d=Object.fromEntries(new FormData(f));
+if(sb&&['up','in','reset','newpw'].includes(k)){await authAct(k,d);return}
+if(sb&&['addc','addl','grant'].includes(k)){await adminAct(k,d,f);return}
+if(k==='reset'){$('#am').innerHTML='<div class="msg err">Қалпына келтіру сервер қосылғанда ғана жұмыс істейді.</div>';return}
+if(k==='contact'&&sb){const {error}=await sb.from('messages').insert({name:d.n,email:d.e,subject:d.s,body:d.m});$('#fm').innerHTML=error?'<div class="msg err">Хабарлама жіберілмеді. Қайталап көріңіз.</div>':'<div class="msg">Рақмет! Хабарламаңыз қабылданды.</div>';if(!error)f.reset();return}
 if(k==='contact'){$('#fm').innerHTML='<div class="msg err">Хабарлама жіберілмеді. Қайталап көріңіз.<br><small>(Демо: сервер қосылмаған, сондықтан хабарлама жіберу мүмкін емес.)</small></div>'}
-if(k==='order'){if(d.d==='Мекенжайға жеткізу'&&!(d.a||'').trim()){$('#om').innerHTML='<div class="msg err">Жеткізу үшін мекенжайды енгізіңіз.</div>';return}
-S.orders.unshift({date:new Date().toLocaleString('kk-KZ'),items:S.cart.map(i=>findP(i.id).n+(i.o?' ('+i.o+')':'')+' × '+i.q).join(', '),sum:total(),st:'Төленбеген (демо, төлем жүйесі қосылмаған)'});
-S.cart=[];save();S.tab='orders';
-$('#om').innerHTML='';app.innerHTML=`<div class="page"><h1>Тапсырыс демо режимде сақталды</h1><div class="msg note">Төлем жүйесі қосылмаған, сондықтан төлем өткен жоқ. Тапсырыс «Менің тапсырыстарым» бөлімінде көрінеді.</div><div class="row"><button class="btn" data-go="account">Тапсырыстарым</button><button class="btn ghost" data-go="shop">Каталогқа өту</button></div></div>`;R2();}
+if(k==='links'){const bad=[],n={};for(const x of['kaspi','wb']){const v=(d[x]||'').trim();if(v&&!okU(x,v))bad.push(x==='kaspi'?'Kaspi':'Wildberries');n[x]=v}
+if(bad.length){$('#lm').innerHTML='<div class="msg err">Сілтеме жарамсыз: '+bad.join(', ')+'. Ресми дүкеннің https:// сілтемесін енгізіңіз.</div>';return}
+S.links=n;save();$('#lm').innerHTML='<div class="msg">Сақталды. Сілтеме тек осы браузерде жұмыс істейді.</div>';$('#cfg').textContent=cfgLine()}
 if(k==='up'){if(S.users.find(u=>u.email===d.e)){$('#am').innerHTML='<div class="msg err">Бұл пошта тіркелген. «Кіру» бөліміне өтіңіз.</div>';return}
 const u={name:d.n.trim(),email:d.e};S.users.push(u);S.user=u;save();R()}
 if(k==='in'){const u=S.users.find(u=>u.email===d.e);if(!u){$('#am').innerHTML='<div class="msg err">Бұл пошта табылмады. Алдымен «Тіркелу» бөліміне өтіңіз (демо).</div>';return}S.user=u;save();R()}
 });
-function R2(){const c=$('#cc');c.hidden=true}
-R();
+
+addEventListener('change',async e=>{const x=e.target;if(sb&&x.dataset&&x.dataset.prog){const q=x.checked?sb.from('progress').upsert({user_id:S.user.id,lesson_id:x.dataset.prog}):sb.from('progress').delete().eq('user_id',S.user.id).eq('lesson_id',x.dataset.prog);const {error}=await q;if(error){x.checked=!x.checked;return}$('#pc').textContent=document.querySelectorAll('[data-prog]:checked').length}});
+if(sb)sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){S.recovery=true;loadSession().then(()=>{location.hash='#/account';R()})}});
+(async()=>{try{await loadSession()}catch(e){}R()})();
 </script>
 </body>
 </html>
